@@ -1,0 +1,102 @@
+[
+   {
+      "name": "Age",
+      "description": "Age of the customer",
+      "role": "input",
+      "type": "integer",
+      "level": "ratio",
+      "format": "range (18-100)",
+      "aggregation": "",
+      "length": 2
+    },
+    {
+      "name": "Occupation",
+      "description": "Profession of the customer",
+      "role": "input",
+      "type": "string",
+      "level": "nominal",
+      "format": "dropdown selection",
+      "aggregation": "",
+      "length": 12
+    },
+    {
+      "name": "Annual Income",
+      "description": "Yearly income of the customer in dollars",
+      "role": "input",
+      "type": "integer",
+      "level": "ratio",
+      "format": "range (10,000 - 1,000,000,000)",
+      "aggregation": "",
+      "length": 10
+    },
+    {
+      "name": "Payment of Minimum Amount",
+      "description": "Whether the customer usually makes the minimum payment on their credit card",
+      "role": "input",
+      "type": "boolean",
+      "level": "nominal",
+      "format": "Yes/No",
+      "aggregation": "",
+      "length": 3
+    },
+    {
+      "name": "Payment Behavior",
+      "description": "Customer's typical payment behavior",
+      "role": "input",
+      "type": "string",
+      "level": "ordinal",
+      "format": "dropdown selection",
+      "aggregation": "",
+      "length": 30
+    },
+    {
+      "name": "Number of Bank Accounts",
+      "description": "Total bank accounts owned by the customer",
+      "role": "input",
+      "type": "integer",
+      "level": "ratio",
+      "format": "range (1-12)",
+      "aggregation": "",
+      "length": 2
+    },
+    {
+      "name": "Number of Credit Cards",
+      "description": "Total credit cards owned by the customer",
+      "role": "input",
+      "type": "integer",
+      "level": "ratio",
+      "format": "range (1-12)",
+      "aggregation": "",
+      "length": 2
+    },
+    {
+      "name": "Outstanding Debt",
+      "description": "Total outstanding debt in dollars",
+      "role": "input",
+      "type": "integer",
+      "level": "ratio",
+      "format": "range (0 - 100,000)",
+      "aggregation": "",
+      "length": 6
+    },
+    {
+      "name": "Interest Rate",
+      "description": "Interest rate on credit cards (%)",
+      "role": "input",
+      "type": "float",
+      "level": "ratio",
+      "format": "range (1.0 - 33.0)",
+      "aggregation": "",
+      "length": 4
+    },
+    {
+      "name": "Credit Mix",
+      "description": "Quality of customer's credit mix",
+      "role": "input",
+      "type": "string",
+      "level": "ordinal",
+      "format": "dropdown selection",
+      "aggregation": "",
+      "length": 8
+    }        
+]

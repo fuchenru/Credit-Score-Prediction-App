@@ -1,0 +1,13 @@
+[
+   {
+      "name": "Predicted Credit Score",
+      "description": "The predicted category of the customer's credit score based on their financial behavior and history",
+      "role": "output",
+      "type": "string",
+      "level": "ordinal",
+      "format": "categories",
+      "categories": ["Poor Credit Score", "Average Credit Score", "Good Credit Score"],
+      "aggregation": "",
+      "length": 18
+    }    
+]

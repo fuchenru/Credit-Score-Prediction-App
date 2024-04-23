@@ -1,0 +1,17 @@
+{
+   "name": "rf_classifier_random",
+   "description": "Random Forest Classifier model used for predicting credit score categories based on customer financial behavior and history. The model predicts whether a customer's credit score is poor, average, or good.",
+   "scoreCodeType": "python",
+   "algorithm": "RandomForestClassifier",
+   "function": "classification",
+   "modeler": "Triple Double",
+   "modelType": "python",
+   "trainCodeType": "python",
+   "trainTable": "Customer_Financial_Data",
+   "eventProbVar": "Predicted_Probability",
+   "targetVariable": "Credit_Score_Category",
+   "targetEvent": "Good Credit Score",
+   "targetLevel": "ordinal",
+   "tool": "Python"
+}
+ 

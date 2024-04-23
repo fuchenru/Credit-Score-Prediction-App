@@ -1,0 +1,61 @@
+{
+    "model_info": {
+        "n_estimators": 100,
+        "max_depth": null,
+        "max_features": "sqrt",
+        "model_type": "RandomForestClassifier"
+    },
+    "data_info": {
+        "train_data": {
+            "number_of_records": 20620,
+            "number_of_features": 18,
+            "features": [
+                "Age",
+                "Occupation",
+                "Annual_Income",
+                "Num_Bank_Accounts",
+                "Num_Credit_Card",
+                "Interest_Rate",
+                "Num_of_Loan",
+                "Delay_from_due_date",
+                "Num_of_Delayed_Payment",
+                "Changed_Credit_Limit",
+                "Num_Credit_Inquiries",
+                "Credit_Mix",
+                "Outstanding_Debt",
+                "Credit_History_Age",
+                "Payment_of_Min_Amount",
+                "Payment_Behaviour",
+                "Monthly_Balance",
+                "Credit_Score"
+            ]
+        },
+        "test_data": {
+            "number_of_records": 10546,
+            "number_of_features": 17,
+            "features": [
+                "Age",
+                "Occupation",
+                "Annual_Income",
+                "Num_Bank_Accounts",
+                "Num_Credit_Card",
+                "Interest_Rate",
+                "Num_of_Loan",
+                "Delay_from_due_date",
+                "Num_of_Delayed_Payment",
+                "Changed_Credit_Limit",
+                "Num_Credit_Inquiries",
+                "Credit_Mix",
+                "Outstanding_Debt",
+                "Credit_History_Age",
+                "Payment_of_Min_Amount",
+                "Payment_Behaviour",
+                "Monthly_Balance"
+            ]
+        }
+    },
+    "application_info": {
+        "main_script": "app.py",
+        "description": "Application for predicting using RandomForestClassifier"
+    }
+}
