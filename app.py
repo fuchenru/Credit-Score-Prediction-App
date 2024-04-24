@@ -180,5 +180,6 @@ if st.button('Predict Credit Score'):
             st.dataframe(user_data)
             
             # Complete the progress bar to 100%
-            progress_bar.progress(100)
             time.sleep(2)
+            progress_bar.progress(100)
+            st.balloons()
