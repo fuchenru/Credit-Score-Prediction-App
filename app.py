@@ -4,7 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-
+import time
 # os.chdir('/Users/peter/Desktop/credit-score-prediction')
 
 @st.cache_resource  
@@ -143,6 +143,7 @@ user_data = pd.DataFrame({
 if st.button('Predict Credit Score'):
     # Display a spinner during the prediction process
     with st.spinner("Analyzing your data and predicting credit score..."):
+        time.sleep(2)
         prediction, feature_importances = predict_credit_score(user_data)
         progress_bar = st.progress(0)
         
@@ -161,6 +162,7 @@ if st.button('Predict Credit Score'):
             
             # Update progress bar to 50% after prediction
             progress_bar.progress(50)
+            time.sleep(2)
             
             # Display the prediction result with appropriate styling
             st.markdown(f"<h3 style='{style}'>Predicted Credit Score: {predicted_class}</h3>", unsafe_allow_html=True)
@@ -179,3 +181,4 @@ if st.button('Predict Credit Score'):
             
             # Complete the progress bar to 100%
             progress_bar.progress(100)
+            time.sleep(2)
