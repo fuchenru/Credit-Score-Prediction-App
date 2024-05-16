@@ -4,11 +4,13 @@ import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import numpy as np
 import time
 # os.chdir('/Users/peter/Desktop/credit-score-prediction')
 
 @st.cache_resource  
 def load_model():
+    
     with open('rf_classifier_random.pkl', 'rb') as model_file:
         model = pickle.load(model_file)
         return model
@@ -75,11 +77,171 @@ def predict_credit_score(data):
     feature_importances = model.feature_importances_ if hasattr(model, 'feature_importances_') else None
 
     return prediction, feature_importances
- 
+
+#### Cleaning column function ####
+def clean_col(col):
+    col = pd.to_numeric(col, errors='coerce')
+    # Replace negative values with NaN
+    col = col.apply(lambda x: x if x > 0 else np.nan)
+    if col.name == 'Age':
+        col = col.apply(lambda x: x if 1 <= x <= 100 else np.nan)
+    return col
+
+# Data cleaning (missing data + outliers)
+def clean_data(df):
+    columns = ['Age','Annual_Income', 'Num_Bank_Accounts',
+        'Num_Credit_Card', 'Interest_Rate', 'Num_of_Loan',
+        'Delay_from_due_date', 'Num_of_Delayed_Payment', 'Changed_Credit_Limit',
+        'Num_Credit_Inquiries', 'Credit_Mix', 'Outstanding_Debt',
+        'Credit_History_Age',
+        'Payment_of_Min_Amount', 'Occupation',
+        'Payment_Behaviour', 'Monthly_Balance','Credit_Score']
+
+    df = df[[column for column in df.columns if column in columns]]
+    
+    # Age
+    df['Age'] = clean_col(df['Age'])
+
+    # Occupation
+    df = df[df['Occupation'].str.contains('_______') == False]
+
+    # Annual Income
+    df['Annual_Income'] = clean_col(df['Annual_Income'])
+
+    # Num Bank Account
+    df['Num_Bank_Accounts'] = clean_col(df['Num_Bank_Accounts'])
+
+    # Num Credit Card
+    df['Num_Credit_Card'] = clean_col(df['Num_Credit_Card'])
+    
+    # Interest Rate
+    df['Interest_Rate'] = clean_col(df['Interest_Rate'])
+
+    # Num of Loan
+    df['Num_of_Loan'] = clean_col(df['Num_of_Loan'])
+
+    # Delay from due date
+    df['Delay_from_due_date'] = clean_col(df['Delay_from_due_date'])
+
+    # Num of Delated Payment
+    df['Num_of_Delayed_Payment'] = clean_col(df['Num_of_Delayed_Payment'])
+
+    # Change Credit Limit
+    df['Changed_Credit_Limit'] = clean_col(df['Changed_Credit_Limit'])
+
+    # Num Credit Inquiries
+    df['Num_Credit_Inquiries'] = clean_col(df['Num_Credit_Inquiries'])
+    
+    # Credit Mix 
+    df = df[df['Credit_Mix'].str.contains('_') == False]
+
+    # Outstanding Debt
+    df['Outstanding_Debt'] = clean_col(df['Outstanding_Debt'])
+
+    
+    # Credit History Age
+    df['Credit_History_Age'] = df['Credit_History_Age'].astype(str).str.replace(' Years and ','.')
+    df['Credit_History_Age'] = df['Credit_History_Age'].astype(str).str.replace('Months','')
+    df['Credit_History_Age'] = df['Credit_History_Age'].astype(str).str.replace('nan','NaN')
+
+    # Payment of Min Amount
+    df = df[df['Payment_of_Min_Amount'] != 'NM']
+
+    # Payment behavior
+    df = df[df['Payment_Behaviour'] != '!@9#%8']
+
+    # Monthly Balance 
+    df['Monthly_Balance'] = clean_col(df['Monthly_Balance'])
+
+    df['Age'] = df['Age'].astype('Int64')
+    df['Interest_Rate'] = df['Interest_Rate'].astype('Int64')
+    df['Delay_from_due_date'] = df['Delay_from_due_date'].astype('Int64')
+    df['Credit_History_Age'] = df['Credit_History_Age'].astype('float')
+    df['Num_Bank_Accounts'] = df['Num_Bank_Accounts'].astype('Int64')
+    
+    ## Convert to 2 decimal
+    df['Monthly_Balance'] = df['Monthly_Balance'].round(2)
+    
+    ## Convert target variable into numerical
+    df['Credit_Score'] = df['Credit_Score'].str.replace('Good', '2', n=-1)
+    df['Credit_Score'] = df['Credit_Score'].str.replace('Standard', '1', n=-1)
+    df['Credit_Score'] = df['Credit_Score'].str.replace('Poor', '0', n=-1)
+    df['Credit_Score'] = df[['Credit_Score']].apply(pd.to_numeric)
+
+    na_stats = df.isna().sum()
+    st.write("Sum of the Nan values")
+    st.write(na_stats)
+    
+    # Calculate the percentage of NaN values for each column
+    nan_percentage = df.isna().mean() * 100
+    
+    # Sort the columns based on the percentage of NaN values in descending order
+    nan_percentage_sorted = nan_percentage.sort_values(ascending=False)
+    
+    # Remove columns with 0 percent NaN values
+    nan_percentage_sorted = nan_percentage_sorted[nan_percentage_sorted != 0]
+    
+    st.write("Percentage of the Nan values")
+    st.write(nan_percentage_sorted)
+
+    st.write("Boxplots for outliers")
+    # Assuming df_cleaned is your DataFrame
+    numeric_columns = df.select_dtypes(include=[np.number]).columns
+    
+    # Set up a 3x3 subplot grid
+    fig, axes = plt.subplots(nrows=3, ncols=5, figsize=(30, 12))
+    # Flatten the 2D array of subplots into a 1D array
+    axes = axes.flatten()
+    
+    # Loop through each numeric column and create a box plot
+    for i, column in enumerate(numeric_columns):
+        sns.boxplot(x=df[column], ax=axes[i])
+        axes[i].set_title(f'Box Plot for {column}')
+    
+    # Adjust layout
+    plt.tight_layout()
+    
+    # Show the plot
+    plt.show()
+    st.pyplot(fig)
+    
+    # Loop through each numeric column and drop outliers
+    for column in numeric_columns:
+        Q1 = df[column].quantile(0.25)
+        Q3 = df[column].quantile(0.75)
+        IQR = Q3 - Q1
+        
+        # Drop outliers
+        df = df.drop(df.loc[df[column] > (Q3 + 1.5 * IQR)].index)
+        df = df.drop(df.loc[df[column] < (Q1 - 1.5 * IQR)].index)
+    
+    df.dropna(inplace=True)
+    return df
+
+
 # Start Streamlit
 st.title('Credit Score Prediction App')
 image_path = "https://i.imgur.com/iFV05Nd.jpeg"
 st.image(image_path, use_column_width=True)
+
+# Data file importer 
+st.title("Import data file")
+
+uploaded_file = st.file_uploader("Choose a file", type=["csv", "xlsx"])
+
+if uploaded_file is not None:
+    # To read a CSV file
+    if uploaded_file.name.endswith('.csv'):
+        df = pd.read_csv(uploaded_file)
+    # To read an Excel file
+    elif uploaded_file.name.endswith('.xlsx'):
+        df = pd.read_excel(uploaded_file)
+        
+    df = clean_data(df)
+    st.write("File successfully uploaded and cleaned!")
+    st.write(df.head())
+
+
 
 # User inputs
 with st.sidebar:
