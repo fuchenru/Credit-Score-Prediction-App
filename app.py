@@ -6,7 +6,44 @@ import seaborn as sns
 import os
 import numpy as np
 import time
+from sklearn.metrics import accuracy_score, precision_score, recall_score,f1_score, confusion_matrix, ConfusionMatrixDisplay, classification_report
 # os.chdir('/Users/peter/Desktop/credit-score-prediction')
+
+
+def evaluate_classification(y_true, y_pred):
+    # Calculate metrics
+    accuracy = accuracy_score(y_true, y_pred)
+    precision = precision_score(y_true, y_pred, average='weighted')
+    recall = recall_score(y_true, y_pred, average='weighted')
+    f1 = f1_score(y_true, y_pred, average='weighted')
+    
+    # Calculate confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    
+    return {
+        'Accuracy': accuracy,
+        'Precision': precision,
+        'Recall': recall,
+        'F1 Score': f1,
+        'Confusion Matrix': cm
+    }
+
+def get_metrics_as_dataframe(model_name, metrics_dict):
+    model_name = model_name  # Replace with your model's name
+    accuracy = metrics_dict['Accuracy']
+    precision = metrics_dict['Precision']
+    recall = metrics_dict['Recall']
+    f1 = metrics_dict['F1 Score']
+    
+    table = pd.DataFrame({
+        'Model': [model_name],
+        'Accuracy': [accuracy],
+        'Precision': [precision],
+        'Recall': [recall],
+        'F1 Score': [f1],
+    })
+
+    return table
 
 @st.cache_resource  
 def load_model():
@@ -89,84 +126,37 @@ def clean_col(col):
 
 # Data cleaning (missing data + outliers)
 def clean_data(df):
-    columns = ['Age','Annual_Income', 'Num_Bank_Accounts',
-        'Num_Credit_Card', 'Interest_Rate', 'Num_of_Loan',
-        'Delay_from_due_date', 'Num_of_Delayed_Payment', 'Changed_Credit_Limit',
-        'Num_Credit_Inquiries', 'Credit_Mix', 'Outstanding_Debt',
-        'Credit_History_Age',
-        'Payment_of_Min_Amount', 'Occupation',
-        'Payment_Behaviour', 'Monthly_Balance','Credit_Score']
 
-    df = df[[column for column in df.columns if column in columns]]
+    # Distribution of numerical features
+    # bin_edges = range(0, 85, 5)
     
-    # Age
-    df['Age'] = clean_col(df['Age'])
-
-    # Occupation
-    df = df[df['Occupation'].str.contains('_______') == False]
-
-    # Annual Income
-    df['Annual_Income'] = clean_col(df['Annual_Income'])
-
-    # Num Bank Account
-    df['Num_Bank_Accounts'] = clean_col(df['Num_Bank_Accounts'])
-
-    # Num Credit Card
-    df['Num_Credit_Card'] = clean_col(df['Num_Credit_Card'])
+    # Create the Seaborn plot
+    # plt.figure(figsize=(10, 6))
+    # sns.histplot(df['Age'], bins=bin_edges, kde=True)
+    # plt.title('Distribution of Age')
     
-    # Interest Rate
-    df['Interest_Rate'] = clean_col(df['Interest_Rate'])
-
-    # Num of Loan
-    df['Num_of_Loan'] = clean_col(df['Num_of_Loan'])
-
-    # Delay from due date
-    df['Delay_from_due_date'] = clean_col(df['Delay_from_due_date'])
-
-    # Num of Delated Payment
-    df['Num_of_Delayed_Payment'] = clean_col(df['Num_of_Delayed_Payment'])
-
-    # Change Credit Limit
-    df['Changed_Credit_Limit'] = clean_col(df['Changed_Credit_Limit'])
-
-    # Num Credit Inquiries
-    df['Num_Credit_Inquiries'] = clean_col(df['Num_Credit_Inquiries'])
+    # Set x-axis ticks to match the bin edges
+    # plt.xticks(bin_edges, rotation=45)  # Adjust rotation if needed
     
-    # Credit Mix 
-    df = df[df['Credit_Mix'].str.contains('_') == False]
+    # # Display the plot in Streamlit
+    # st.pyplot(plt)
 
-    # Outstanding Debt
-    df['Outstanding_Debt'] = clean_col(df['Outstanding_Debt'])
+    plt.figure(figsize=(25, 6))  # Adjust the width as needed
+    sns.countplot(x='Occupation', hue='Credit_Score', data=df)
+    plt.title('Credit Score Distribution by Occupation')
+    plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
+    st.pyplot(plt)
 
-    
-    # Credit History Age
-    df['Credit_History_Age'] = df['Credit_History_Age'].astype(str).str.replace(' Years and ','.')
-    df['Credit_History_Age'] = df['Credit_History_Age'].astype(str).str.replace('Months','')
-    df['Credit_History_Age'] = df['Credit_History_Age'].astype(str).str.replace('nan','NaN')
+    plt.figure(figsize=(10, 6))  # Adjust the width as needed
+    sns.countplot(x='Payment_of_Min_Amount', hue='Credit_Score', data=df)
+    plt.title('Credit Score Distribution by payment_of_min_amount')
+    st.pyplot(plt)
 
-    # Payment of Min Amount
-    df = df[df['Payment_of_Min_Amount'] != 'NM']
+    plt.figure(figsize=(25, 6))  # Adjust the width as needed
+    sns.countplot(x='Payment_Behaviour', hue='Credit_Score', data=df)
+    plt.title('Credit Score Distribution by Payment Behavior')
+    st.pyplot(plt)
 
-    # Payment behavior
-    df = df[df['Payment_Behaviour'] != '!@9#%8']
-
-    # Monthly Balance 
-    df['Monthly_Balance'] = clean_col(df['Monthly_Balance'])
-
-    df['Age'] = df['Age'].astype('Int64')
-    df['Interest_Rate'] = df['Interest_Rate'].astype('Int64')
-    df['Delay_from_due_date'] = df['Delay_from_due_date'].astype('Int64')
-    df['Credit_History_Age'] = df['Credit_History_Age'].astype('float')
-    df['Num_Bank_Accounts'] = df['Num_Bank_Accounts'].astype('Int64')
-    
-    ## Convert to 2 decimal
-    df['Monthly_Balance'] = df['Monthly_Balance'].round(2)
-    
-    ## Convert target variable into numerical
-    df['Credit_Score'] = df['Credit_Score'].str.replace('Good', '2', n=-1)
-    df['Credit_Score'] = df['Credit_Score'].str.replace('Standard', '1', n=-1)
-    df['Credit_Score'] = df['Credit_Score'].str.replace('Poor', '0', n=-1)
-    df['Credit_Score'] = df[['Credit_Score']].apply(pd.to_numeric)
 
     na_stats = df.isna().sum()
     st.write("Sum of the Nan values")
@@ -185,6 +175,83 @@ def clean_data(df):
     st.write(nan_percentage_sorted)
 
     st.write("Boxplots for outliers")
+    
+        
+    columns = ['Age','Annual_Income', 'Num_Bank_Accounts',
+        'Num_Credit_Card', 'Interest_Rate', 'Num_of_Loan',
+        'Delay_from_due_date', 'Num_of_Delayed_Payment', 'Changed_Credit_Limit',
+        'Num_Credit_Inquiries', 'Credit_Mix', 'Outstanding_Debt',
+        'Credit_History_Age',
+        'Payment_of_Min_Amount', 'Occupation',
+        'Payment_Behaviour', 'Monthly_Balance','Credit_Score']
+
+    df = df[[column for column in df.columns if column in columns]]
+    
+    # Age
+    df['Age'] = clean_col(df['Age'])
+    
+    # Occupation
+    df = df[df['Occupation'].str.contains('_______') == False]
+    
+    df['Annual_Income'] = clean_col(df['Annual_Income'])
+    
+    # Num Bank Account
+    df['Num_Bank_Accounts'] = clean_col(df['Num_Bank_Accounts'])
+    
+    # Num Credit Card
+    df['Num_Credit_Card'] = clean_col(df['Num_Credit_Card'])
+    
+    # Interest Rate
+    df['Interest_Rate'] = clean_col(df['Interest_Rate'])
+    
+    # Num of Loan
+    df['Num_of_Loan'] = clean_col(df['Num_of_Loan'])
+    
+    # Delay from due date
+    df['Delay_from_due_date'] = clean_col(df['Delay_from_due_date'])
+    
+    # Num of Delated Payment
+    df['Num_of_Delayed_Payment'] = clean_col(df['Num_of_Delayed_Payment'])
+    
+    # Change Credit Limit
+    df['Changed_Credit_Limit'] = clean_col(df['Changed_Credit_Limit'])
+    
+    # Num Credit Inquiries
+    df['Num_Credit_Inquiries'] = clean_col(df['Num_Credit_Inquiries'])
+    
+    # Credit Mix 
+    df = df[df['Credit_Mix'].str.contains('_') == False]
+    
+    # Outstanding Debt
+    df['Outstanding_Debt'] = clean_col(df['Outstanding_Debt'])
+    
+    df['Credit_History_Age'] = df['Credit_History_Age'].astype(str).str.replace(' Years and ','.')
+    df['Credit_History_Age'] = df['Credit_History_Age'].astype(str).str.replace('Months','')
+    df['Credit_History_Age'] = df['Credit_History_Age'].astype(str).str.replace('nan','NaN')
+    
+    df = df[df['Payment_of_Min_Amount'] != 'NM']
+    df = df[df['Payment_Behaviour'] != '!@9#%8']
+    
+    # Monthly Balance 
+    df['Monthly_Balance'] = clean_col(df['Monthly_Balance'])
+    
+    ## Change dtypes
+    df['Age'] = df['Age'].astype('float')
+    df['Interest_Rate'] = df['Interest_Rate'].astype('float')
+    df['Delay_from_due_date'] = df['Delay_from_due_date'].astype('float')
+    df['Credit_History_Age'] = df['Credit_History_Age'].astype('float')
+    df['Num_Bank_Accounts'] = df['Num_Bank_Accounts'].astype('float')
+    
+    ## Convert to 2 decimal
+    df['Monthly_Balance'] = df['Monthly_Balance'].round(2)
+    
+    ## Convert target variable into numerical
+    df['Credit_Score'] = df['Credit_Score'].str.replace('Good', '2', n=-1)
+    df['Credit_Score'] = df['Credit_Score'].str.replace('Standard', '1', n=-1)
+    df['Credit_Score'] = df['Credit_Score'].str.replace('Poor', '0', n=-1)
+    df['Credit_Score'] = df[['Credit_Score']].apply(pd.to_numeric)
+
+        ## Outliers 
     # Assuming df_cleaned is your DataFrame
     numeric_columns = df.select_dtypes(include=[np.number]).columns
     
@@ -204,9 +271,17 @@ def clean_data(df):
     # Show the plot
     plt.show()
     st.pyplot(fig)
+
+    # Define the critical columns for the first step
+    critical_columns = ["Interest_Rate", "Delay_from_due_date", "Num_Credit_Inquiries", "Outstanding_Debt"]
     
-    # Loop through each numeric column and drop outliers
-    for column in numeric_columns:
+    # Remove rows with more than two missing values in the critical columns
+    df = df[df[critical_columns].isnull().sum(axis=1) <= 2]
+
+    columns_unusual_boxplots = ["Annual_Income", "Num_Bank_Accounts", "Num_Credit_Card", 
+                            "Interest_Rate", "Num_of_Loan", "Num_of_Delayed_Payment", "Num_Credit_Inquiries"]
+
+    for column in columns_unusual_boxplots:
         Q1 = df[column].quantile(0.25)
         Q3 = df[column].quantile(0.75)
         IQR = Q3 - Q1
@@ -214,9 +289,48 @@ def clean_data(df):
         # Drop outliers
         df = df.drop(df.loc[df[column] > (Q3 + 1.5 * IQR)].index)
         df = df.drop(df.loc[df[column] < (Q1 - 1.5 * IQR)].index)
-    
+
+    categorical_features = ['Occupation','Credit_Mix','Payment_of_Min_Amount','Payment_Behaviour']
+
+    # Loop through all columns in the DataFrame
+    for col in df.columns:
+        if col not in (columns_unusual_boxplots + categorical_features):
+            # Replace NaN values with the mean of the column
+            df[col].fillna(df[col].mean(), inplace=True)
+
     df.dropna(inplace=True)
-    return df
+
+        # Selecting categorical features
+    categorical_features = ['Occupation','Credit_Mix','Payment_of_Min_Amount','Payment_Behaviour']
+    
+    # Applying one-hot encoding
+    df = pd.get_dummies(df, columns=categorical_features, drop_first=True)
+
+    X = df[['Age', 'Annual_Income', 'Num_Bank_Accounts', 'Num_Credit_Card',
+       'Interest_Rate', 'Num_of_Loan', 'Delay_from_due_date',
+       'Num_of_Delayed_Payment', 'Changed_Credit_Limit',
+       'Num_Credit_Inquiries', 'Outstanding_Debt', 'Credit_History_Age',
+       'Monthly_Balance', 'Occupation_Architect',
+       'Occupation_Developer', 'Occupation_Doctor', 'Occupation_Engineer',
+       'Occupation_Entrepreneur', 'Occupation_Journalist', 'Occupation_Lawyer',
+       'Occupation_Manager', 'Occupation_Mechanic', 'Occupation_Media_Manager',
+       'Occupation_Musician', 'Occupation_Scientist', 'Occupation_Teacher',
+       'Occupation_Writer', 'Credit_Mix_Good', 'Credit_Mix_Standard',
+       'Payment_of_Min_Amount_Yes',
+       'Payment_Behaviour_High_spent_Medium_value_payments',
+       'Payment_Behaviour_High_spent_Small_value_payments',
+       'Payment_Behaviour_Low_spent_Large_value_payments',
+       'Payment_Behaviour_Low_spent_Medium_value_payments',
+       'Payment_Behaviour_Low_spent_Small_value_payments']]
+    
+    y = df['Credit_Score']
+    
+    prediction = model.predict(X)
+    
+    confusion_matrix = evaluate_classification(y, prediction)
+    final_df = get_metrics_as_dataframe("Random Forest Classifier", confusion_matrix)
+    return final_df
+    
 
 
 # Start Streamlit
@@ -238,8 +352,8 @@ if uploaded_file is not None:
         df = pd.read_excel(uploaded_file)
         
     df = clean_data(df)
-    st.write("File successfully uploaded and cleaned!")
-    st.write(df.head())
+    st.write("Final prediction accuracy: ")
+    st.write(df)
 
 
 
@@ -301,11 +415,17 @@ user_data = pd.DataFrame({
     'Payment_of_Min_Amount': [payment_of_min_amount == 'True']
 }, index=[0])
 
+### Predit overall uploaded dataframe
+
+#if st.button('Predict Uploaded Data and Get Scoring'):
+    
+
+
+
 # Predict button and results
 if st.button('Predict Credit Score'):
     # Display a spinner during the prediction process
     with st.spinner("Analyzing your data and predicting credit score..."):
-        time.sleep(2)
         prediction, feature_importances = predict_credit_score(user_data)
         progress_bar = st.progress(0)
         
